@@ -33,14 +33,9 @@ sap.ui.define([
         },
 
         onOpenSections(oEvent) {
-            // Find the nearest parent that has the row binding context
-            let o = oEvent.getSource();
-            while (o && typeof o.getBindingContext !== "function") o = o.getParent();
-            while (o && !o.getBindingContext("view")) o = o.getParent();
-            const ctx = o && o.getBindingContext("view");
-            if (!ctx) return;
-            const id = ctx.getObject().ID;
-            this.getRouter().navTo("CourseDetail", { id: String(id), query: { tab: "sections" } });
+            const id = oEvent.getSource().data("courseId");
+            if (!id) return;
+            this.getRouter().navTo("SectionManagement", { id: String(id) });
         },
 
         onSearch(oEvent) {

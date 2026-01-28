@@ -83,6 +83,11 @@
           "target": ["CourseList"]
         },
         {
+          "name": "SectionManagement",
+          "pattern": "course/{id}/sections",
+          "target": ["SectionManagement"]
+        },
+        {
           "name": "CourseDetail",
           "pattern": "course/{id}:?query:",
           "target": ["CourseDetail"]
@@ -92,6 +97,10 @@
         "CourseList": {
           "id": "CourseList",
           "name": "CourseList"
+        },
+        "SectionManagement": {
+          "id": "SectionManagement",
+          "name": "SectionManagement"
         },
         "CourseDetail": {
           "id": "CourseDetail",

@@ -81,7 +81,11 @@
                                 <Text text="{view>creditHours}"/>
                                 <ObjectStatus text="{view>status}" state="Success"/>
                                 <HBox justifyContent="Center">
-                                    <Button text="{i18n>sectionsButton}" type="Transparent" press="onOpenSections"/>
+                                    <Button text="{i18n>sectionsButton}" type="Transparent" press="onOpenSections">
+                                        <customData>
+                                            <core:CustomData key="courseId" value="{view>ID}" writeToDom="false"/>
+                                        </customData>
+                                    </Button>
                                 </HBox>
                             </cells>
                         </ColumnListItem>

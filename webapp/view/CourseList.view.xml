@@ -2,21 +2,92 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:core="sap.ui.core">
-    <Page id="courseListPage" title="{i18n>courseListTitle}">
-        <headerContent>
-            <Button id="createCourse" text="{i18n>createCourse}" press="onCreateCourse" type="Emphasized"/>
-        </headerContent>
+    <Page id="courseListPage" showHeader="false">
         <content>
-            <List id="courseList" items="{/Courses}"
-                mode="SingleSelectMaster" selectionChange="onCourseSelect" noDataText="{i18n>noCourses}">
-                <ObjectListItem type="Navigation" title="{courseCode}" number="{creditHours}" numberUnit="{i18n>credits}"
-                    intro="{courseName}">
-                    <attributes>
-                        <ObjectAttribute text="{programme}"/>
-                        <ObjectAttribute text="{i18n>year}: {year}"/>
-                    </attributes>
-                </ObjectListItem>
-            </List>
+            <VBox class="sapUiLargeMargin">
+                <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                    <VBox>
+                        <Title text="{i18n>courseManagementTitle}" level="H2"/>
+                        <Text text="{i18n>courseManagementSubtitle}"/>
+                    </VBox>
+                    <Button id="createCourse" text="{i18n>createCourse}" press="onCreateCourse" type="Emphasized" icon="sap-icon://add"/>
+                </HBox>
+
+                <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                    <SearchField id="searchField" width="30rem"
+                        placeholder="{i18n>searchPlaceholder}"
+                        liveChange="onSearch"/>
+                </HBox>
+
+                <HBox class="sapUiSmallMarginBottom" renderType="Bare" justifyContent="SpaceBetween">
+                    <HBox>
+                        <VBox class="sapUiTinyMarginEnd">
+                            <Label text="{i18n>faculty}"/>
+                            <Select width="12rem" selectedKey="{view>/filters/faculty}" change="onFilterChange">
+                                <items>
+                                    <core:Item key="" text="{i18n>allFaculties}"/>
+                                    <core:Item key="Computing" text="Computing"/>
+                                    <core:Item key="Mathematics" text="Mathematics"/>
+                                    <core:Item key="Physics" text="Physics"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                        <VBox class="sapUiTinyMarginEnd">
+                            <Label text="{i18n>programme}"/>
+                            <Input width="16rem" value="{view>/filters/programme}" liveChange="onFilterChange"/>
+                        </VBox>
+                        <VBox class="sapUiTinyMarginEnd">
+                            <Label text="{i18n>yearOfStudy}"/>
+                            <Select width="10rem" selectedKey="{view>/filters/year}" change="onFilterChange">
+                                <items>
+                                    <core:Item key="" text="{i18n>allYears}"/>
+                                    <core:Item key="1" text="Year 1"/>
+                                    <core:Item key="2" text="Year 2"/>
+                                    <core:Item key="3" text="Year 3"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                        <VBox>
+                            <Label text="{i18n>status}"/>
+                            <Select width="10rem" selectedKey="{view>/filters/status}" change="onFilterChange">
+                                <items>
+                                    <core:Item key="" text="{i18n>allStatuses}"/>
+                                    <core:Item key="Active" text="Active"/>
+                                </items>
+                            </Select>
+                        </VBox>
+                    </HBox>
+                </HBox>
+
+                <Table id="courseTable" items="{view>/filteredCourses}" noDataText="{i18n>noCourses}">
+                    <columns>
+                        <Column><Text text="{i18n>courseCode}"/></Column>
+                        <Column><Text text="{i18n>courseName}"/></Column>
+                        <Column><Text text="{i18n>faculty}"/></Column>
+                        <Column><Text text="{i18n>programme}"/></Column>
+                        <Column><Text text="{i18n>year}"/></Column>
+                        <Column><Text text="{i18n>creditHours}"/></Column>
+                        <Column><Text text="{i18n>status}"/></Column>
+                        <Column hAlign="Center"><Text text="{i18n>actions}"/></Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem type="Navigation" press="onCourseRowPress">
+                            <cells>
+                                <Text text="{view>courseCode}"/>
+                                <Text text="{view>courseName}"/>
+                                <Text text="{view>faculty}"/>
+                                <Text text="{view>programme}"/>
+                                <Text text="Year {view>year}"/>
+                                <Text text="{view>creditHours}"/>
+                                <ObjectStatus text="{view>status}" state="Success"/>
+                                <HBox justifyContent="Center">
+                                    <Button text="{i18n>sectionsButton}" type="Transparent" press="onOpenSections"/>
+                                </HBox>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </VBox>
         </content>
     </Page>
 </mvc:View>

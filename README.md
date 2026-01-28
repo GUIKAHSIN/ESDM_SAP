@@ -32,4 +32,33 @@ An SAP Fiori application.
 
 1. Active NodeJS LTS (Long Term Support) version and associated supported NPM version.  (See https://nodejs.org)
 
+---
+
+## Course Master Data Administration (UTHM)
+
+Admin-only module for the Subject Registration Enhancement System: courses, sections, prerequisites, and timetable scheduling. SAP CAP-style backend (in-memory), UI5 frontend.
+
+### Run the full stack
+
+1. **Start the CAP OData API** (port 4004):
+   ```bash
+   npm run start:api
+   ```
+2. **Start the UI5 app** (Fiori run):
+   ```bash
+   npm start
+   ```
+   Then open the URL shown (e.g. `.../test/flp.html#app-preview` or `.../index.html`).
+
+### Functional scope
+
+- **Course Master Data**: Create, update, view. Attributes: Course code, name, credit hours, programme, year.
+- **Course Sections**: Add sections to a course; assign lecturer, venue, student quota, day and time. One course, many sections.
+- **Prerequisites**: Define prerequisite course for a course (must be completed before registration).
+- **Timetable**: View sections by day/time; validations: same venue or same lecturer cannot be double-booked at the same time.
+
+### Tech
+
+- **Backend**: `srv/` (CDS service + in-memory handlers), `db/schema.cds` (domain model). No DB; mock data in `srv/course-admin-service.js`.
+- **Frontend**: `webapp/` (UI5, OData V4 to `http://localhost:4004/odata/v4/course-admin/`).
 

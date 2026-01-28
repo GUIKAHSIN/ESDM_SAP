@@ -10,6 +10,15 @@
     "title": "{{appTitle}}",
     "description": "{{appDescription}}",
     "resources": "resources.json",
+    "dataSources": {
+      "mainService": {
+        "uri": "http://localhost:4004/odata/v4/course-admin/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0"
+        }
+      }
+    },
     "sourceTemplate": {
       "id": "@sap/generator-fiori:basic",
       "version": "1.20.1",
@@ -38,7 +47,8 @@
       "minUI5Version": "1.144.0",
       "libs": {
         "sap.m": {},
-        "sap.ui.core": {}
+        "sap.ui.core": {},
+        "sap.ui.layout": {}
       }
     },
     "contentDensities": {
@@ -50,6 +60,15 @@
         "type": "sap.ui.model.resource.ResourceModel",
         "settings": {
           "bundleName": "admin.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "type": "sap.ui.model.odata.v4.ODataModel",
+        "preload": true,
+        "settings": {
+          "synchronizationMode": "None",
+          "operationMode": "Server"
         }
       }
     },
@@ -74,17 +93,24 @@
       },
       "routes": [
         {
-          "name": "RouteView1",
-          "pattern": ":?query:",
-          "target": [
-            "TargetView1"
-          ]
+          "name": "CourseList",
+          "pattern": "",
+          "target": ["CourseList"]
+        },
+        {
+          "name": "CourseDetail",
+          "pattern": "course/{id}",
+          "target": ["CourseDetail"]
         }
       ],
       "targets": {
-        "TargetView1": {
-          "id": "View1",
-          "name": "View1"
+        "CourseList": {
+          "id": "CourseList",
+          "name": "CourseList"
+        },
+        "CourseDetail": {
+          "id": "CourseDetail",
+          "name": "CourseDetail"
         }
       }
     },

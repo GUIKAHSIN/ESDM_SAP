@@ -1,0 +1,22 @@
+<mvc:View controllerName="admin.controller.CourseList"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <Page id="courseListPage" title="{i18n>courseListTitle}">
+        <headerContent>
+            <Button id="createCourse" text="{i18n>createCourse}" press="onCreateCourse" type="Emphasized"/>
+        </headerContent>
+        <content>
+            <List id="courseList" items="{/Courses}"
+                mode="SingleSelectMaster" selectionChange="onCourseSelect" noDataText="{i18n>noCourses}">
+                <ObjectListItem type="Navigation" title="{courseCode}" number="{creditHours}" numberUnit="{i18n>credits}"
+                    intro="{courseName}">
+                    <attributes>
+                        <ObjectAttribute text="{programme}"/>
+                        <ObjectAttribute text="{i18n>year}: {year}"/>
+                    </attributes>
+                </ObjectListItem>
+            </List>
+        </content>
+    </Page>
+</mvc:View>

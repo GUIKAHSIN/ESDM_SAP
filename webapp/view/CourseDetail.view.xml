@@ -1,0 +1,113 @@
+<mvc:View controllerName="admin.controller.CourseDetail"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:form="sap.ui.layout.form">
+    <Page id="courseDetailPage" title="{i18n>courseDetail}"
+        showNavButton="true" navButtonPress="onNavBack">
+        <headerContent>
+            <Button id="editCourse" text="{i18n>edit}" press="onEditCourse" visible="{= !${view>/editMode}}"/>
+            <Button id="saveCourse" text="{i18n>save}" press="onSaveCourse" type="Emphasized" visible="{view>/editMode}"/>
+            <Button id="cancelEdit" text="{i18n>cancel}" press="onCancelEdit" visible="{view>/editMode}"/>
+        </headerContent>
+        <content>
+            <IconTabBar id="detailTabs" select="onTabSelect">
+                <items>
+                    <IconTabFilter id="tabGeneral" key="general" text="{i18n>general}">
+                        <form:SimpleForm id="courseForm" editable="{view>/editMode}" layout="ResponsiveGridLayout"
+                            labelSpanXL="3" labelSpanL="3" labelSpanM="3" labelSpanS="12"
+                            emptySpanXL="4" emptySpanL="4" emptySpanM="4" emptySpanS="0" columnsXL="1" columnsL="1" columnsM="1">
+                            <form:content>
+                                <Label text="{i18n>courseCode}"/>
+                                <Input value="{courseCode}" enabled="false"/>
+                                <Label text="{i18n>courseName}"/>
+                                <Input value="{courseName}"/>
+                                <Label text="{i18n>creditHours}"/>
+                                <StepInput value="{creditHours}" min="1" max="6" step="0.5"/>
+                                <Label text="{i18n>programme}"/>
+                                <Input value="{programme}"/>
+                                <Label text="{i18n>year}"/>
+                                <StepInput value="{year}" min="1" max="5"/>
+                            </form:content>
+                        </form:SimpleForm>
+                    </IconTabFilter>
+                    <IconTabFilter id="tabSections" key="sections" text="{i18n>sections}">
+                        <VBox class="sapUiSmallMargin">
+                            <HBox justifyContent="End" class="sapUiSmallMarginBottom">
+                                <Button id="addSection" text="{i18n>addSection}" press="onAddSection" type="Emphasized"/>
+                            </HBox>
+                            <Table id="sectionsTable" items="{view>/sections}" noDataText="{i18n>noSections}">
+                                <columns>
+                                    <Column><Text text="{i18n>lecturer}"/></Column>
+                                    <Column><Text text="{i18n>venue}"/></Column>
+                                    <Column><Text text="{i18n>quota}"/></Column>
+                                    <Column><Text text="{i18n>day}"/></Column>
+                                    <Column><Text text="{i18n>time}"/></Column>
+                                    <Column width="4rem"/>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{path: 'lecturer_ID', formatter: '.formatLecturer'}"/>
+                                            <Text text="{path: 'venue_ID', formatter: '.formatVenue'}"/>
+                                            <Text text="{studentQuota}"/>
+                                            <Text text="{dayOfWeek}"/>
+                                            <Text text="{startTime} - {endTime}"/>
+                                            <Button icon="sap-icon://delete" type="Transparent" press="onDeleteSection"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    <IconTabFilter id="tabPrereq" key="prereq" text="{i18n>prerequisites}">
+                        <VBox class="sapUiSmallMargin">
+                            <HBox justifyContent="End" class="sapUiSmallMarginBottom">
+                                <Button id="addPrereq" text="{i18n>addPrereq}" press="onAddPrereq" type="Emphasized"/>
+                            </HBox>
+                            <Table id="prereqTable" items="{view>/prereqs}" noDataText="{i18n>noPrereqs}">
+                                <columns>
+                                    <Column><Text text="{i18n>prerequisiteCourse}"/></Column>
+                                    <Column width="4rem"/>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{path: 'prerequisiteCourse_ID', formatter: '.formatCourse'}"/>
+                                            <Button icon="sap-icon://delete" type="Transparent" press="onDeletePrereq"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                    <IconTabFilter id="tabTimetable" key="timetable" text="{i18n>timetable}">
+                        <VBox class="sapUiSmallMargin">
+                            <Table id="timetableTable" items="{view>/sections}" noDataText="{i18n>noSections}">
+                                <columns>
+                                    <Column><Text text="{i18n>section}"/></Column>
+                                    <Column><Text text="{i18n>day}"/></Column>
+                                    <Column><Text text="{i18n>time}"/></Column>
+                                    <Column><Text text="{i18n>venue}"/></Column>
+                                    <Column><Text text="{i18n>lecturer}"/></Column>
+                                    <Column><Text text="{i18n>quota}"/></Column>
+                                </columns>
+                                <items>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Text text="{path: 'ID', formatter: '.formatSectionId'}"/>
+                                            <Text text="{dayOfWeek}"/>
+                                            <Text text="{startTime} - {endTime}"/>
+                                            <Text text="{path: 'venue_ID', formatter: '.formatVenue'}"/>
+                                            <Text text="{path: 'lecturer_ID', formatter: '.formatLecturer'}"/>
+                                            <Text text="{studentQuota}"/>
+                                        </cells>
+                                    </ColumnListItem>
+                                </items>
+                            </Table>
+                        </VBox>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+    </Page>
+</mvc:View>

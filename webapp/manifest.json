@@ -10,15 +10,6 @@
     "title": "{{appTitle}}",
     "description": "{{appDescription}}",
     "resources": "resources.json",
-    "dataSources": {
-      "mainService": {
-        "uri": "http://localhost:4004/odata/v4/course-admin/",
-        "type": "OData",
-        "settings": {
-          "odataVersion": "4.0"
-        }
-      }
-    },
     "sourceTemplate": {
       "id": "@sap/generator-fiori:basic",
       "version": "1.20.1",
@@ -63,13 +54,7 @@
         }
       },
       "": {
-        "dataSource": "mainService",
-        "type": "sap.ui.model.odata.v4.ODataModel",
-        "preload": true,
-        "settings": {
-          "synchronizationMode": "None",
-          "operationMode": "Server"
-        }
+        "type": "sap.ui.model.json.JSONModel"
       }
     },
     "resources": {

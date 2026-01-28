@@ -17,43 +17,47 @@ sap.ui.define([
                 prereqs: [],
                 lecturers: [],
                 venues: [],
-                courses: []
+                courses: [],
+                course: null
             });
             this.getView().setModel(v, "view");
 
             this.getRouter().getRoute("CourseDetail").attachPatternMatched(this._onRouteMatched, this);
-            this._loadLookups();
+            this._loadLookupsFromMainModel();
         },
 
         _onRouteMatched(oEv) {
             const id = oEv.getParameter("arguments").id;
             if (!id) return;
-            const page = this.byId("courseDetailPage");
-            page.bindElement({ path: "/Courses(" + id + ")", model: "" });
-            this.getView().getModel("view").setProperty("/currentCourseId", parseInt(id, 10));
-            this._loadSectionsAndPrereqs(parseInt(id, 10));
+            const courseId = parseInt(id, 10);
+            const m = this.getView().getModel(); // main JSON model
+            const courses = m.getProperty("/Courses") || [];
+            const course = courses.find((c) => c.ID === courseId) || null;
+
+            this.getView().getModel("view").setProperty("/currentCourseId", courseId);
+            this.getView().getModel("view").setProperty("/course", course);
+
+            // bind page to selected course (view model)
+            this.byId("courseDetailPage").bindElement({ path: "view>/course" });
+            this._refreshDerivedLists(courseId);
         },
 
-        _loadLookups() {
-            const m = this.getView().getModel();
+        _loadLookupsFromMainModel() {
+            const m = this.getView().getModel(); // main JSON model
             const v = this.getView().getModel("view");
-            if (!m) return;
-            const done = (key, a) => v.setProperty("/" + key, a || []);
-
-            m.bindList("/Lecturers").requestContexts(0, 200).then((a) => done("lecturers", (a || []).map((c) => c.getObject())));
-            m.bindList("/Venues").requestContexts(0, 200).then((a) => done("venues", (a || []).map((c) => c.getObject())));
-            m.bindList("/Courses").requestContexts(0, 500).then((a) => done("courses", (a || []).map((c) => c.getObject())));
+            v.setProperty("/lecturers", m.getProperty("/Lecturers") || []);
+            v.setProperty("/venues", m.getProperty("/Venues") || []);
+            v.setProperty("/courses", m.getProperty("/Courses") || []);
         },
 
-        _loadSectionsAndPrereqs(courseId) {
+        _refreshDerivedLists(courseId) {
             const m = this.getView().getModel();
             const v = this.getView().getModel("view");
-            const f = new Filter("course_ID", "EQ", courseId);
-
-            m.bindList("/CourseSections", null, [], [f]).requestContexts(0, 200)
-                .then((a) => v.setProperty("/sections", (a || []).map((c) => c.getObject())));
-            m.bindList("/Prerequisites", null, [], [f]).requestContexts(0, 200)
-                .then((a) => v.setProperty("/prereqs", (a || []).map((c) => c.getObject())));
+            const allSections = m.getProperty("/CourseSections") || [];
+            const allPrereqs = m.getProperty("/Prerequisites") || [];
+            v.setProperty("/sections", allSections.filter((s) => s.course_ID === courseId));
+            v.setProperty("/prereqs", allPrereqs.filter((p) => p.course_ID === courseId));
+            v.setProperty("/courses", m.getProperty("/Courses") || []);
         },
 
         onNavBack() {
@@ -65,19 +69,27 @@ sap.ui.define([
         },
 
         onSaveCourse() {
+            const v = this.getView().getModel("view");
+            const course = v.getProperty("/course");
+            if (!course) return;
+            // data already edited in the bound object; ensure it is written back
             const m = this.getView().getModel();
-            m.submitBatch().then(() => {
-                this.getView().getModel("view").setProperty("/editMode", false);
-                MessageToast.show(this.getResourceBundle().getText("saved"));
-            }).catch((e) => {
-                MessageBox.error((e.cause && e.cause.message) || (e.message) || String(e));
-            });
+            const courses = m.getProperty("/Courses") || [];
+            const idx = courses.findIndex((c) => c.ID === course.ID);
+            if (idx >= 0) courses[idx] = course;
+            m.setProperty("/Courses", courses);
+            v.setProperty("/editMode", false);
+            MessageToast.show(this.getResourceBundle().getText("saved"));
         },
 
         onCancelEdit() {
-            const ctx = this.byId("courseDetailPage").getBindingContext();
-            if (ctx) ctx.requestRefresh();
-            this.getView().getModel("view").setProperty("/editMode", false);
+            const v = this.getView().getModel("view");
+            const cid = v.getProperty("/currentCourseId");
+            // reload selected course from main model
+            const m = this.getView().getModel();
+            const courses = m.getProperty("/Courses") || [];
+            v.setProperty("/course", courses.find((c) => c.ID === cid) || null);
+            v.setProperty("/editMode", false);
         },
 
         onAddSection() {
@@ -123,7 +135,7 @@ sap.ui.define([
         },
 
         _onSaveSection(d, courseId) {
-            const m = this.getView().getModel();
+            const m = this.getView().getModel(); // main JSON model
             const selL = this.byId("addSec_lecturer");
             const selV = this.byId("addSec_venue");
             const selD = this.byId("addSec_day");
@@ -137,18 +149,35 @@ sap.ui.define([
             const studentQuota = quota ? parseInt(quota.getValue(), 10) : 40;
             const startTime = (start && start.getValue()) || "08:00";
             const endTime = (end && end.getValue()) || "09:30";
+            // conflict validation (simple)
+            const all = m.getProperty("/CourseSections") || [];
+            const overlaps = (s) => {
+                if (s.dayOfWeek !== dayOfWeek) return false;
+                const toMin = (t) => {
+                    const [h, mm] = String(t || "0:0").split(":").map(Number);
+                    return (h || 0) * 60 + (mm || 0);
+                };
+                const s1 = toMin(startTime), e1 = toMin(endTime);
+                const s2 = toMin(s.startTime), e2 = toMin(s.endTime);
+                return s1 < e2 && e1 > s2;
+            };
+            if (venue_ID != null && all.some((s) => s.venue_ID === venue_ID && overlaps(s))) {
+                MessageBox.error("Venue conflict: same venue is already scheduled at that time.");
+                return;
+            }
+            if (lecturer_ID != null && all.some((s) => s.lecturer_ID === lecturer_ID && overlaps(s))) {
+                MessageBox.error("Lecturer conflict: same lecturer is already scheduled at that time.");
+                return;
+            }
 
-            const ctx = m.createEntry("/CourseSections", {
-                course_ID: courseId,
-                lecturer_ID, venue_ID, studentQuota, dayOfWeek, startTime, endTime
-            });
-            m.submitBatch().then(() => {
-                d.close();
-                this._loadSectionsAndPrereqs(courseId);
-                MessageToast.show(this.getResourceBundle().getText("sectionAdded"));
-            }).catch((e) => {
-                MessageBox.error((e.cause && e.cause.message) || (e.message) || String(e));
-            });
+            const nextId = (m.getProperty("/nextIds/CourseSections") || 10) + 1;
+            m.setProperty("/nextIds/CourseSections", nextId);
+            all.push({ ID: nextId, course_ID: courseId, lecturer_ID, venue_ID, studentQuota, dayOfWeek, startTime, endTime });
+            m.setProperty("/CourseSections", all);
+
+            d.close();
+            this._refreshDerivedLists(courseId);
+            MessageToast.show(this.getResourceBundle().getText("sectionAdded"));
         },
 
         onDeleteSection(oEv) {
@@ -160,18 +189,10 @@ sap.ui.define([
                 onClose: (a) => {
                     if (a !== MessageBox.Action.OK) return;
                     const m = this.getView().getModel();
-                    const path = "/CourseSections(" + o.ID + ")";
-                    const binding = m.bindContext(path);
-                    const ctx = binding.getBoundContext ? binding.getBoundContext() : null;
-                    if (ctx && typeof ctx.delete === "function") {
-                        ctx.delete();
-                        m.submitBatch().then(() => {
-                            this._loadSectionsAndPrereqs(cid);
-                            MessageToast.show(this.getResourceBundle().getText("deleted"));
-                        }).catch((e) => MessageBox.error((e && e.message) || String(e)));
-                    } else {
-                        MessageBox.error(this.getResourceBundle().getText("deleteNotSupported"));
-                    }
+                    const all = m.getProperty("/CourseSections") || [];
+                    m.setProperty("/CourseSections", all.filter((s) => s.ID !== o.ID));
+                    this._refreshDerivedLists(cid);
+                    MessageToast.show(this.getResourceBundle().getText("deleted"));
                 }
             });
         },
@@ -201,13 +222,18 @@ sap.ui.define([
             const sel = this.byId("addPrereq_sel");
             const pid = sel ? parseInt(sel.getSelectedKey(), 10) : null;
             if (pid == null) { MessageBox.alert(this.getResourceBundle().getText("selectPrereq")); return; }
+            if (pid === courseId) { MessageBox.error("A course cannot be its own prerequisite."); return; }
             const m = this.getView().getModel();
-            m.createEntry("/Prerequisites", { course_ID: courseId, prerequisiteCourse_ID: pid });
-            m.submitBatch().then(() => {
-                d.close();
-                this._loadSectionsAndPrereqs(courseId);
-                MessageToast.show(this.getResourceBundle().getText("prereqAdded"));
-            }).catch((e) => MessageBox.error((e.cause && e.cause.message) || (e.message) || String(e)));
+            const all = m.getProperty("/Prerequisites") || [];
+            const exists = all.some((p) => p.course_ID === courseId && p.prerequisiteCourse_ID === pid);
+            if (exists) { MessageBox.error("This prerequisite is already defined."); return; }
+            const nextId = (m.getProperty("/nextIds/Prerequisites") || 10) + 1;
+            m.setProperty("/nextIds/Prerequisites", nextId);
+            all.push({ ID: nextId, course_ID: courseId, prerequisiteCourse_ID: pid });
+            m.setProperty("/Prerequisites", all);
+            d.close();
+            this._refreshDerivedLists(courseId);
+            MessageToast.show(this.getResourceBundle().getText("prereqAdded"));
         },
 
         onDeletePrereq(oEv) {
@@ -219,18 +245,10 @@ sap.ui.define([
                 onClose: (a) => {
                     if (a !== MessageBox.Action.OK) return;
                     const m = this.getView().getModel();
-                    const path = "/Prerequisites(" + o.ID + ")";
-                    const binding = m.bindContext(path);
-                    const ctx = binding.getBoundContext ? binding.getBoundContext() : null;
-                    if (ctx && typeof ctx.delete === "function") {
-                        ctx.delete();
-                        m.submitBatch().then(() => {
-                            this._loadSectionsAndPrereqs(cid);
-                            MessageToast.show(this.getResourceBundle().getText("deleted"));
-                        }).catch((e) => MessageBox.error((e && e.message) || String(e)));
-                    } else {
-                        MessageBox.error(this.getResourceBundle().getText("deleteNotSupported"));
-                    }
+                    const all = m.getProperty("/Prerequisites") || [];
+                    m.setProperty("/Prerequisites", all.filter((p) => p.ID !== o.ID));
+                    this._refreshDerivedLists(cid);
+                    MessageToast.show(this.getResourceBundle().getText("deleted"));
                 }
             });
         },

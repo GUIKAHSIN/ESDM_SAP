@@ -24,17 +24,15 @@ sap.ui.define([
             if (!this._createDialog) {
                 this._createDialog = this._getCreateDialog();
             }
-            this._createDialog.getBindingContext() && this._createDialog.getBindingContext().destroy();
             this._createDialog.setBindingContext(null);
-            const oModel = this.getView().getModel();
-            const ctx = oModel.createEntry("/Courses", {
+            this._createDraft = {
                 courseCode: "",
                 courseName: "",
                 creditHours: 3,
                 programme: "",
                 year: 1
-            });
-            this._createDialog.setBindingContext(ctx);
+            };
+            this._createDialog.setModel(new JSONModel(this._createDraft), "draft");
             this._createDialog.open();
         },
 
@@ -46,15 +44,15 @@ sap.ui.define([
                 content: [
                     new sap.m.VBox({ items: [
                         new sap.m.Label({ text: "{i18n>courseCode}" }),
-                        new sap.m.Input({ value: "{courseCode}", required: true }),
+                        new sap.m.Input({ value: "{draft>/courseCode}", required: true }),
                         new sap.m.Label({ text: "{i18n>courseName}" }),
-                        new sap.m.Input({ value: "{courseName}" }),
+                        new sap.m.Input({ value: "{draft>/courseName}" }),
                         new sap.m.Label({ text: "{i18n>creditHours}" }),
-                        new sap.m.StepInput({ value: "{creditHours}", min: 1, max: 6, step: 0.5 }),
+                        new sap.m.StepInput({ value: "{draft>/creditHours}", min: 1, max: 6, step: 0.5 }),
                         new sap.m.Label({ text: "{i18n>programme}" }),
-                        new sap.m.Input({ value: "{programme}" }),
+                        new sap.m.Input({ value: "{draft>/programme}" }),
                         new sap.m.Label({ text: "{i18n>year}" }),
-                        new sap.m.StepInput({ value: "{year}", min: 1, max: 5 })
+                        new sap.m.StepInput({ value: "{draft>/year}", min: 1, max: 5 })
                     ]})
                 ],
                 beginButton: new sap.m.Button({ text: that.getResourceBundle().getText("save"), type: "Emphasized", press: function () { that.onSaveNewCourse(); } }),
@@ -66,26 +64,37 @@ sap.ui.define([
 
         onSaveNewCourse() {
             const d = this._createDialog;
-            const ctx = d.getBindingContext();
-            if (!ctx) return;
-            const m = this.getView().getModel();
-            const o = ctx.getObject();
+            const draft = d.getModel("draft");
+            const o = draft && draft.getData();
             if (!(o.courseCode || "").trim()) {
                 MessageBox.error(this.getResourceBundle().getText("courseCodeRequired"));
                 return;
             }
-            m.setProperty(ctx.getPath() + "/courseCode", (o.courseCode || "").trim());
-            m.setProperty(ctx.getPath() + "/courseName", (o.courseName || "").trim());
-            m.setProperty(ctx.getPath() + "/creditHours", o.creditHours);
-            m.setProperty(ctx.getPath() + "/programme", (o.programme || "").trim());
-            m.setProperty(ctx.getPath() + "/year", o.year);
-            m.submitBatch().then(() => {
-                d.close();
-                MessageToast.show(this.getResourceBundle().getText("courseCreated"));
-            }).catch((e) => {
-                const msg = (e.cause && e.cause.message) || (e.message) || String(e);
-                MessageBox.error(msg);
+            const m = this.getView().getModel(); // main JSON model
+            const courses = m.getProperty("/Courses") || [];
+
+            const code = (o.courseCode || "").trim();
+            const exists = courses.some((c) => String(c.courseCode || "").toLowerCase() === code.toLowerCase());
+            if (exists) {
+                MessageBox.error(`Course code "${code}" already exists.`);
+                return;
+            }
+
+            const nextId = (m.getProperty("/nextIds/Courses") || 10) + 1;
+            m.setProperty("/nextIds/Courses", nextId);
+
+            courses.push({
+                ID: nextId,
+                courseCode: code,
+                courseName: (o.courseName || "").trim(),
+                creditHours: Number(o.creditHours) || 0,
+                programme: (o.programme || "").trim(),
+                year: parseInt(o.year, 10) || 1
             });
+            m.setProperty("/Courses", courses);
+
+            d.close();
+            MessageToast.show(this.getResourceBundle().getText("courseCreated"));
         },
 
         getRouter() {

@@ -1,29 +1,20 @@
 {
   "name": "admin",
   "version": "0.0.1",
-  "description": "UTHM Course Master Data Administration - Subject Registration Enhancement.",
+  "description": "UTHM Course Master Data Administration - Subject Registration Enhancement (UI5 mock).",
   "keywords": [
     "ui5",
     "openui5",
-    "sapui5",
-    "cap",
-    "sap-cap"
+    "sapui5"
   ],
   "main": "webapp/index.html",
-  "cds": {
-    "requires": {}
-  },
-  "dependencies": {
-    "@sap/cds": "^7"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@ui5/cli": "^4.0.33",
     "@sap/ux-ui5-tooling": "1"
   },
   "scripts": {
     "start": "fiori run --open \"test/flp.html#app-preview\"",
-    "start:api": "cds run",
-    "start:cap": "cds run",
     "start-local": "fiori run --config ./ui5-local.yaml --open \"test/flp.html#app-preview\"",
     "build": "ui5 build --config=ui5.yaml --clean-dest --dest dist",
     "deploy": "fiori verify",

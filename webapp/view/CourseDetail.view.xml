@@ -18,15 +18,15 @@
                             emptySpanXL="4" emptySpanL="4" emptySpanM="4" emptySpanS="0" columnsXL="1" columnsL="1" columnsM="1">
                             <form:content>
                                 <Label text="{i18n>courseCode}"/>
-                                <Input value="{courseCode}" enabled="false"/>
+                                <Input value="{view>courseCode}" enabled="false"/>
                                 <Label text="{i18n>courseName}"/>
-                                <Input value="{courseName}"/>
+                                <Input value="{view>courseName}"/>
                                 <Label text="{i18n>creditHours}"/>
-                                <StepInput value="{creditHours}" min="1" max="6" step="0.5"/>
+                                <StepInput value="{view>creditHours}" min="1" max="6" step="0.5"/>
                                 <Label text="{i18n>programme}"/>
-                                <Input value="{programme}"/>
+                                <Input value="{view>programme}"/>
                                 <Label text="{i18n>year}"/>
-                                <StepInput value="{year}" min="1" max="5"/>
+                                <StepInput value="{view>year}" min="1" max="5"/>
                             </form:content>
                         </form:SimpleForm>
                     </IconTabFilter>

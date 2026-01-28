@@ -84,7 +84,7 @@
         },
         {
           "name": "CourseDetail",
-          "pattern": "course/{id}",
+          "pattern": "course/{id}:?query:",
           "target": ["CourseDetail"]
         }
       ],

@@ -27,7 +27,8 @@ sap.ui.define([
         },
 
         _onRouteMatched(oEv) {
-            const id = oEv.getParameter("arguments").id;
+            const args = oEv.getParameter("arguments") || {};
+            const id = args.id;
             if (!id) return;
             const courseId = parseInt(id, 10);
             const m = this.getView().getModel(); // main JSON model
@@ -40,6 +41,13 @@ sap.ui.define([
             // bind page to selected course (view model)
             this.byId("courseDetailPage").bindElement({ path: "view>/course" });
             this._refreshDerivedLists(courseId);
+
+            // if navigated from "Sections" button, jump to sections tab
+            const tab = args.query && args.query.tab;
+            if (tab) {
+                const tabs = this.byId("detailTabs");
+                if (tabs) tabs.setSelectedKey(tab);
+            }
         },
 
         _loadLookupsFromMainModel() {

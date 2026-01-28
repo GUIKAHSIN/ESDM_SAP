@@ -33,10 +33,14 @@ sap.ui.define([
         },
 
         onOpenSections(oEvent) {
-            const ctx = oEvent.getSource().getParent().getParent().getBindingContext("view");
+            // Find the nearest parent that has the row binding context
+            let o = oEvent.getSource();
+            while (o && typeof o.getBindingContext !== "function") o = o.getParent();
+            while (o && !o.getBindingContext("view")) o = o.getParent();
+            const ctx = o && o.getBindingContext("view");
             if (!ctx) return;
             const id = ctx.getObject().ID;
-            this.getRouter().navTo("CourseDetail", { id: String(id) });
+            this.getRouter().navTo("CourseDetail", { id: String(id), query: { tab: "sections" } });
         },
 
         onSearch(oEvent) {

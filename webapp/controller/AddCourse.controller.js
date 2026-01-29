@@ -12,11 +12,14 @@ sap.ui.define([
                 faculty: "",
                 yearOfStudy: "",
                 programmes: [],
+                programmeSummary: "",
+                allProgrammesSelected: false,
                 courseCode: "",
                 courseName: "",
                 creditHours: 3,
                 availablePrereqCourses: [],
-                selectedPrereqPaths: []
+                filteredPrereqCourses: [],
+                prereqSearch: ""
             });
             this.getView().setModel(vm, "view");
 
@@ -38,6 +41,50 @@ sap.ui.define([
 
             const courses = main.getProperty("/Courses") || [];
             vm.setProperty("/availablePrereqCourses", courses);
+            vm.setProperty("/filteredPrereqCourses", courses);
+        },
+
+        onOpenProgrammePopover(oEvent) {
+            const that = this;
+            const src = oEvent.getSource();
+            const vm = this.getView().getModel("view");
+            const rb = this.getResourceBundle();
+            if (!this._programmePopover) {
+                const vbox = new sap.m.VBox({ id: this.getView().getId() + "--programmeVBox" });
+                const allCb = new sap.m.CheckBox({ text: rb.getText("allProgrammes"), id: this.getView().getId() + "--allProg" });
+                allCb.attachSelect(function () {
+                    const progs = vm.getProperty("/programmes") || [];
+                    const sel = allCb.getSelected();
+                    progs.forEach((p, i) => vm.setProperty("/programmes/" + i + "/selected", sel));
+                });
+                vbox.addItem(allCb);
+                this._programmePopover = new sap.m.Popover({
+                    title: rb.getText("programmeBachelor"),
+                    contentWidth: "22rem",
+                    content: [vbox],
+                    afterClose: function () { that._updateProgrammeSummary(); }
+                });
+                this.getView().addDependent(this._programmePopover);
+            }
+            const progs = vm.getProperty("/programmes") || [];
+            const vbox = this._programmePopover.getContent()[0];
+            while (vbox.getItems().length > 1) vbox.removeItem(vbox.getItems()[1]);
+            progs.forEach((p, i) => {
+                const cb = new sap.m.CheckBox({ text: p.name, selected: !!p.selected });
+                const idx = i;
+                cb.attachSelect(function () { vm.setProperty("/programmes/" + idx + "/selected", cb.getSelected()); });
+                vbox.addItem(cb);
+            });
+            const allCb = vbox.getItems()[0];
+            allCb.setSelected(progs.length > 0 && progs.every((p) => p.selected));
+            this._programmePopover.openBy(src);
+        },
+
+        _updateProgrammeSummary() {
+            const vm = this.getView().getModel("view");
+            const progs = vm.getProperty("/programmes") || [];
+            const selected = progs.filter((p) => p.selected).map((p) => p.name);
+            vm.setProperty("/programmeSummary", selected.length ? selected.join(", ") : "");
         },
 
         onFacultyChange() {
@@ -55,6 +102,19 @@ sap.ui.define([
             const vm = this.getView().getModel("view");
             const progs = vm.getProperty("/programmes") || [];
             return progs.filter((p) => p.selected).map((p) => p.name);
+        },
+
+        onPrereqSearch(oEvent) {
+            const q = (oEvent.getParameter("newValue") || "").toLowerCase().trim();
+            const vm = this.getView().getModel("view");
+            vm.setProperty("/prereqSearch", q);
+            const all = vm.getProperty("/availablePrereqCourses") || [];
+            const filtered = q ? all.filter((c) =>
+                String(c.courseCode || "").toLowerCase().includes(q) ||
+                String(c.courseName || "").toLowerCase().includes(q) ||
+                String(c.faculty || "").toLowerCase().includes(q)
+            ) : all;
+            vm.setProperty("/filteredPrereqCourses", filtered);
         },
 
         _collectSelectedPrereqIds() {

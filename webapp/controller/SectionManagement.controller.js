@@ -150,22 +150,18 @@ sap.ui.define([
                 (s.venue_ID === venue_ID || s.lecturer_ID === lecturer_ID)
             );
             if (conflicts.length) {
+                const lecturers = v.getProperty("/lecturers") || [];
+                const venues = v.getProperty("/venues") || [];
+                const getName = (arr, id) => (arr.find((x) => x.ID == id) || {}).name || String(id);
+                const slot = `${dayOfWeek} ${startTime}-${endTime}`;
                 const venueConflicts = conflicts.filter((s) => s.venue_ID === venue_ID);
                 const lecturerConflicts = conflicts.filter((s) => s.lecturer_ID === lecturer_ID);
-                const messages = [];
-                if (venueConflicts.length) {
-                    messages.push("Venue conflicts:");
-                    venueConflicts.forEach((s) => {
-                        messages.push(`• ${dayOfWeek} ${s.startTime}-${s.endTime} at venue ID ${s.venue_ID}`);
-                    });
-                }
-                if (lecturerConflicts.length) {
-                    messages.push("Lecturer conflicts:");
-                    lecturerConflicts.forEach((s) => {
-                        messages.push(`• ${dayOfWeek} ${s.startTime}-${s.endTime} with lecturer ID ${s.lecturer_ID}`);
-                    });
-                }
-                MessageBox.error(messages.join("\n"));
+                const venueNames = [...new Set(venueConflicts.map((s) => getName(venues, s.venue_ID)))].filter(Boolean);
+                const lecturerNames = [...new Set(lecturerConflicts.map((s) => getName(lecturers, s.lecturer_ID)))].filter(Boolean);
+                const parts = [`Timetable conflict within ${slot}.`];
+                if (venueNames.length) parts.push("Venue(s) already in use: " + venueNames.join(", ") + ".");
+                if (lecturerNames.length) parts.push("Lecturer(s) already scheduled: " + lecturerNames.join(", ") + ".");
+                MessageBox.error(parts.join("\n"));
                 return;
             }
 

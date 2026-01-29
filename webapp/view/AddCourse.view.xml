@@ -42,12 +42,9 @@
 
                         <VBox class="sapUiSmallMarginBottom">
                             <Label text="{i18n>programmeBachelor}" required="true"/>
-                            <Text text="{i18n>programmeHint}" class="sapUiTinyMarginBottom"/>
-                            <VBox items="{view>/programmes}">
-                                <items>
-                                    <CheckBox text="{view>name}" selected="{path: 'view>selected'}" />
-                                </items>
-                            </VBox>
+                            <Input id="programmeClickInput" value="{view>/programmeSummary}" editable="false"
+                                placeholder="{i18n>programmeClickPlaceholder}" press="onOpenProgrammePopover"
+                                showValueHelp="true" valueHelpRequest="onOpenProgrammePopover"/>
                         </VBox>
 
                         <HBox wrap="Wrap" renderType="Bare" class="sapUiSmallMarginTop">
@@ -70,7 +67,10 @@
                         <VBox class="sapUiSmallMarginTop">
                             <Label text="{i18n>prerequisitesHeader}"/>
                             <Text text="{i18n>prerequisitesHint}" class="sapUiTinyMarginBottom"/>
-                            <List id="prereqList" mode="MultiSelect" items="{view>/availablePrereqCourses}">
+                            <SearchField id="prereqSearch" width="100%" placeholder="{i18n>prereqSearchPlaceholder}"
+                                liveChange="onPrereqSearch"/>
+                            <List id="prereqList" mode="MultiSelect" items="{view>/filteredPrereqCourses}"
+                                class="sapUiSmallMarginTop">
                                 <StandardListItem title="{view>courseCode} {view>courseName}"
                                     description="{view>faculty} • Year {view>year}"/>
                             </List>

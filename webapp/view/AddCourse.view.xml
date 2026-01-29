@@ -1,0 +1,92 @@
+<mvc:View controllerName="admin.controller.AddCourse"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+
+    <Page id="addCoursePage" showHeader="false">
+        <content>
+            <VBox class="sapUiLargeMargin">
+                <Link text="{i18n>backToCourseList}" press="onBackToCourseList"/>
+
+                <Title text="{i18n>addCourseTitle}" level="H2" class="sapUiSmallMarginTop"/>
+                <Text text="{i18n>addCourseSubtitle}" class="sapUiTinyMarginBottom"/>
+
+                <Panel class="sapUiMediumMarginTop" backgroundDesign="Solid">
+                    <VBox class="sapUiLargeMargin">
+                        <HBox wrap="Wrap" class="sapUiSmallMarginBottom" renderType="Bare">
+                            <VBox class="sapUiTinyMarginEnd" width="20rem">
+                                <Label text="{i18n>faculty}" required="true"/>
+                                <Select selectedKey="{view>/faculty}">
+                                    <items>
+                                        <core:Item key="" text="{i18n>selectFaculty}"/>
+                                        <core:Item key="Computing" text="Computing"/>
+                                        <core:Item key="Mathematics" text="Mathematics"/>
+                                        <core:Item key="Physics" text="Physics"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+
+                            <VBox class="sapUiTinyMarginEnd" width="20rem">
+                                <Label text="{i18n>yearOfStudy}" required="true"/>
+                                <Select selectedKey="{view>/yearOfStudy}">
+                                    <items>
+                                        <core:Item key="" text="{i18n>selectYear}"/>
+                                        <core:Item key="1" text="Year 1"/>
+                                        <core:Item key="2" text="Year 2"/>
+                                        <core:Item key="3" text="Year 3"/>
+                                        <core:Item key="4" text="Year 4"/>
+                                    </items>
+                                </Select>
+                            </VBox>
+                        </HBox>
+
+                        <VBox class="sapUiSmallMarginBottom">
+                            <Label text="{i18n>programmeBachelor}" required="true"/>
+                            <Text text="{i18n>programmeHint}" class="sapUiTinyMarginBottom"/>
+                            <VBox items="{view>/programmes}">
+                                <items>
+                                    <CheckBox text="{view>name}" selected="{path: 'view>selected'}" />
+                                </items>
+                            </VBox>
+                        </VBox>
+
+                        <HBox wrap="Wrap" renderType="Bare" class="sapUiSmallMarginTop">
+                            <VBox class="sapUiTinyMarginEnd" width="20rem">
+                                <Label text="{i18n>courseCode}" required="true"/>
+                                <Input value="{view>/courseCode}" placeholder="e.g., CS101"/>
+                            </VBox>
+
+                            <VBox class="sapUiTinyMarginEnd" width="20rem">
+                                <Label text="{i18n>creditHours}" required="true"/>
+                                <StepInput value="{view>/creditHours}" min="1" max="6" step="1"/>
+                            </VBox>
+                        </HBox>
+
+                        <VBox class="sapUiSmallMarginTop">
+                            <Label text="{i18n>courseName}" required="true"/>
+                            <Input value="{view>/courseName}" placeholder="e.g., Introduction to Computer Science"/>
+                        </VBox>
+
+                        <VBox class="sapUiSmallMarginTop">
+                            <Label text="{i18n>prerequisitesHeader}"/>
+                            <Text text="{i18n>prerequisitesHint}" class="sapUiTinyMarginBottom"/>
+                            <List id="prereqList" mode="MultiSelect" items="{view>/availablePrereqCourses}">
+                                <StandardListItem title="{view>courseCode} {view>courseName}"
+                                    description="{view>faculty} • Year {view>year}"/>
+                            </List>
+                        </VBox>
+
+                        <Toolbar class="sapUiMediumMarginTop">
+                            <ToolbarSpacer/>
+                            <Button text="{i18n>saveCourse}" type="Emphasized" press="onSaveCourse"/>
+                            <Button text="{i18n>saveAndManageSections}" type="Accept"
+                                class="sapUiTinyMarginBegin" press="onSaveAndManageSections"/>
+                            <Button text="{i18n>cancel}" class="sapUiTinyMarginBegin" press="onCancel"/>
+                        </Toolbar>
+                    </VBox>
+                </Panel>
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>
+

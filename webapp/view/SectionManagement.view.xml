@@ -92,13 +92,13 @@
                     <items>
                         <ColumnListItem>
                             <cells>
-                                <Text text="{path: 'sectionCode', formatter: '.formatSectionCode'}"/>
-                                <Text text="{path: 'lecturer_ID', formatter: '.formatLecturer'}"/>
-                                <Text text="{dayOfWeek}"/>
-                                <Text text="{startTime} - {endTime}"/>
-                                <Text text="{path: 'venue_ID', formatter: '.formatVenue'}"/>
-                                <Text text="{studentQuota}"/>
-                                <Text text="{enrolled}"/>
+                                <Text text="{path: 'view>sectionCode', formatter: '.formatSectionCode'}"/>
+                                <Text text="{path: 'view>lecturer_ID', formatter: '.formatLecturer'}"/>
+                                <Text text="{view>dayOfWeek}"/>
+                                <Text text="{view>startTime} - {view>endTime}"/>
+                                <Text text="{path: 'view>venue_ID', formatter: '.formatVenue'}"/>
+                                <Text text="{view>studentQuota}"/>
+                                <Text text="{view>enrolled}"/>
                                 <HBox justifyContent="Center">
                                     <Button icon="sap-icon://edit" type="Transparent" press="onEditSection"/>
                                     <Button icon="sap-icon://delete" type="Transparent" press="onDeleteSection"/>

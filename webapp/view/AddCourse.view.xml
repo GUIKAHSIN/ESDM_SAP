@@ -51,13 +51,22 @@
                                             <ToolbarSpacer/>
                                             <ToolbarSeparator/>
                                         </Toolbar>
-                                        <ScrollContainer height="12rem" vertical="true" class="sapUiTinyMarginBottom">
-                                            <VBox items="{view>/programmes}">
-                                                <items>
-                                                    <CheckBox text="{view>name}" selected="{view>selected}" select="onProgrammeSelect"/>
-                                                </items>
-                                            </VBox>
-                                        </ScrollContainer>
+                                                        <List
+                    items="{view>/programmes}"
+                    height="12rem"
+                    mode="None"
+                    showSeparators="None"
+                    class="sapUiTinyMarginBottom">
+
+                    <items>
+                        <CustomListItem>
+                            <CheckBox
+                                text="{view>name}"
+                                selected="{view>selected}"
+                                select="onProgrammeSelect"/>
+                        </CustomListItem>
+                    </items>
+                </List>
                                     </VBox>
                                 </content>
                             </Panel>

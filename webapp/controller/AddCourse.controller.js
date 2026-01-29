@@ -19,7 +19,9 @@ sap.ui.define([
                 creditHours: 3,
                 availablePrereqCourses: [],
                 filteredPrereqCourses: [],
-                prereqSearch: ""
+                prereqSearch: "",
+                selectedPrereqIds: [],
+                prereqSummary: ""
             });
             this.getView().setModel(vm, "view");
 
@@ -58,16 +60,23 @@ sap.ui.define([
                     progs.forEach((p, i) => vm.setProperty("/programmes/" + i + "/selected", sel));
                 });
                 vbox.addItem(allCb);
+                const scroll = new sap.m.ScrollContainer({
+                    horizontal: false,
+                    vertical: true,
+                    height: "16rem",
+                    content: [vbox]
+                });
                 this._programmePopover = new sap.m.Popover({
                     title: rb.getText("programmeBachelor"),
                     contentWidth: "22rem",
-                    content: [vbox],
+                    content: [scroll],
                     afterClose: function () { that._updateProgrammeSummary(); }
                 });
                 this.getView().addDependent(this._programmePopover);
             }
             const progs = vm.getProperty("/programmes") || [];
-            const vbox = this._programmePopover.getContent()[0];
+            const scroll = this._programmePopover.getContent()[0];
+            const vbox = scroll.getContent()[0];
             while (vbox.getItems().length > 1) vbox.removeItem(vbox.getItems()[1]);
             progs.forEach((p, i) => {
                 const cb = new sap.m.CheckBox({ text: p.name, selected: !!p.selected });
@@ -104,10 +113,22 @@ sap.ui.define([
             return progs.filter((p) => p.selected).map((p) => p.name);
         },
 
-        onPrereqSearch(oEvent) {
-            const q = (oEvent.getParameter("newValue") || "").toLowerCase().trim();
+        onPrereqType(oEvent) {
+            const q = (oEvent.getParameter("newValue") || "").trim();
             const vm = this.getView().getModel("view");
             vm.setProperty("/prereqSearch", q);
+            this._filterPrereqAndOpenPopover(q);
+        },
+
+        onPrereqInputFocus(oEvent) {
+            const vm = this.getView().getModel("view");
+            const q = vm.getProperty("/prereqSearch") || "";
+            this._filterPrereqAndOpenPopover(q);
+        },
+
+        _filterPrereqAndOpenPopover(searchText) {
+            const vm = this.getView().getModel("view");
+            const q = (searchText || "").toLowerCase().trim();
             const all = vm.getProperty("/availablePrereqCourses") || [];
             const filtered = q ? all.filter((c) =>
                 String(c.courseCode || "").toLowerCase().includes(q) ||
@@ -115,12 +136,80 @@ sap.ui.define([
                 String(c.faculty || "").toLowerCase().includes(q)
             ) : all;
             vm.setProperty("/filteredPrereqCourses", filtered);
+
+            if (!this._prereqPopover) {
+                const list = new sap.m.List({
+                    id: this.getView().getId() + "--prereqList",
+                    mode: sap.m.ListMode.MultiSelect
+                });
+                list.bindItems({
+                    path: "view>/filteredPrereqCourses",
+                    template: new sap.m.StandardListItem({
+                        title: "{view>courseCode} {view>courseName}",
+                        description: "{view>faculty} • Year {view>year}"
+                    })
+                });
+                list.attachSelectionChange(this._onPrereqSelectionChange.bind(this));
+                this._prereqPopover = new sap.m.Popover({
+                    title: this.getResourceBundle().getText("prerequisitesHeader"),
+                    contentWidth: "28rem",
+                    contentHeight: "18rem",
+                    content: [list],
+                    afterOpen: this._onPrereqPopoverAfterOpen.bind(this),
+                    afterClose: this._onPrereqPopoverAfterClose.bind(this)
+                });
+                this._prereqPopover.setModel(this.getView().getModel("view"), "view");
+                this.getView().addDependent(this._prereqPopover);
+            }
+            this._prereqPopover.openBy(this.byId("prereqInput"));
+        },
+
+        _onPrereqPopoverAfterOpen() {
+            const list = this._prereqPopover.getContent()[0];
+            const vm = this.getView().getModel("view");
+            const selectedIds = vm.getProperty("/selectedPrereqIds") || [];
+            if (selectedIds.length === 0) return;
+            setTimeout(function () {
+                const aContexts = [];
+                for (let i = 0; i < list.getItems().length; i++) {
+                    const ctx = list.getContextByIndex(i);
+                    if (ctx && selectedIds.indexOf(ctx.getObject().ID) >= 0) aContexts.push(ctx);
+                }
+                if (aContexts.length) list.setSelectedContexts(aContexts);
+            }, 100);
+        },
+
+        _onPrereqPopoverAfterClose() {
+            const list = this._prereqPopover.getContent()[0];
+            const aContexts = list.getSelectedContexts("view") || [];
+            const ids = aContexts.map((c) => c.getObject().ID);
+            const vm = this.getView().getModel("view");
+            vm.setProperty("/selectedPrereqIds", ids);
+            this._updatePrereqSummary();
+        },
+
+        _onPrereqSelectionChange(oEvent) {
+            const list = oEvent.getSource();
+            const aContexts = list.getSelectedContexts("view") || [];
+            const ids = aContexts.map((c) => c.getObject().ID);
+            this.getView().getModel("view").setProperty("/selectedPrereqIds", ids);
+            this._updatePrereqSummary();
+        },
+
+        _updatePrereqSummary() {
+            const vm = this.getView().getModel("view");
+            const ids = vm.getProperty("/selectedPrereqIds") || [];
+            const all = vm.getProperty("/availablePrereqCourses") || [];
+            const names = ids.map((id) => {
+                const c = all.find((x) => x.ID === id);
+                return c ? (c.courseCode + " " + (c.courseName || "")) : String(id);
+            });
+            vm.setProperty("/prereqSummary", names.length ? "Selected: " + names.join(", ") : "");
         },
 
         _collectSelectedPrereqIds() {
-            const list = this.byId("prereqList");
-            const aContexts = list.getSelectedContexts("view") || [];
-            return aContexts.map((c) => c.getObject().ID);
+            const vm = this.getView().getModel("view");
+            return vm.getProperty("/selectedPrereqIds") || [];
         },
 
         _validate() {

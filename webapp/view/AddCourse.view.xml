@@ -45,6 +45,7 @@
                             <Input id="programmeClickInput" value="{view>/programmeSummary}" editable="false"
                                 placeholder="{i18n>programmeClickPlaceholder}" press="onOpenProgrammePopover"
                                 showValueHelp="true" valueHelpRequest="onOpenProgrammePopover"/>
+                            <Text text="{i18n>programmeHint}" class="sapUiTinyMarginTop"/>
                         </VBox>
 
                         <HBox wrap="Wrap" renderType="Bare" class="sapUiSmallMarginTop">
@@ -67,13 +68,9 @@
                         <VBox class="sapUiSmallMarginTop">
                             <Label text="{i18n>prerequisitesHeader}"/>
                             <Text text="{i18n>prerequisitesHint}" class="sapUiTinyMarginBottom"/>
-                            <SearchField id="prereqSearch" width="100%" placeholder="{i18n>prereqSearchPlaceholder}"
-                                liveChange="onPrereqSearch"/>
-                            <List id="prereqList" mode="MultiSelect" items="{view>/filteredPrereqCourses}"
-                                class="sapUiSmallMarginTop">
-                                <StandardListItem title="{view>courseCode} {view>courseName}"
-                                    description="{view>faculty} • Year {view>year}"/>
-                            </List>
+                            <Input id="prereqInput" value="{view>/prereqSearch}" placeholder="{i18n>prereqTypePlaceholder}"
+                                liveChange="onPrereqType" focus="onPrereqInputFocus"/>
+                            <Text text="{view>/prereqSummary}" class="sapUiTinyMarginTop" visible="{= ${view>/prereqSummary} !== '' }"/>
                         </VBox>
 
                         <Toolbar class="sapUiMediumMarginTop">

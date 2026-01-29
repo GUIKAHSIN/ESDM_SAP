@@ -71,9 +71,45 @@ sap.ui.define([], () => {
             }
         ],
         CourseSections: [
-            { ID: 1, course_ID: 1, lecturer_ID: 1, venue_ID: 1, studentQuota: 40, dayOfWeek: "Monday", startTime: "08:00", endTime: "09:30" },
-            { ID: 2, course_ID: 1, lecturer_ID: 2, venue_ID: 2, studentQuota: 40, dayOfWeek: "Tuesday", startTime: "10:00", endTime: "11:30" },
-            { ID: 3, course_ID: 2, lecturer_ID: 1, venue_ID: 1, studentQuota: 35, dayOfWeek: "Monday", startTime: "14:00", endTime: "15:30" }
+            // Pre-filled 2 rows for SECP3744 (course_ID: 1)
+            {
+                ID: 1,
+                course_ID: 1,
+                sectionCode: "01",
+                lecturer_ID: 4,          // Dr. Nurul Izza
+                venue_ID: 5,             // N28 BK10
+                studentQuota: 40,
+                enrolled: 35,
+                dayOfWeek: "Wednesday",
+                startTime: "10:00",
+                endTime: "13:00"
+            },
+            {
+                ID: 2,
+                course_ID: 1,
+                sectionCode: "02",
+                lecturer_ID: 3,          // Dr. Mohd Faisal
+                venue_ID: 4,             // N28 BK9
+                studentQuota: 40,
+                enrolled: 28,
+                dayOfWeek: "Wednesday",
+                startTime: "10:00",
+                endTime: "13:00"
+            },
+
+            // Other course section example
+            {
+                ID: 3,
+                course_ID: 2,
+                sectionCode: "01",
+                lecturer_ID: 1,
+                venue_ID: 1,
+                studentQuota: 35,
+                enrolled: 0,
+                dayOfWeek: "Monday",
+                startTime: "14:00",
+                endTime: "15:30"
+            }
         ],
         Prerequisites: [
             { ID: 1, course_ID: 2, prerequisiteCourse_ID: 1 },

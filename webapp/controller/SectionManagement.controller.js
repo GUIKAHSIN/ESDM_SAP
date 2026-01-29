@@ -23,6 +23,7 @@ sap.ui.define([
                 courseId: null,
                 courseTitle: "",
                 showAddForm: false,
+                editingSectionId: null,
                 lecturers: [],
                 venues: [],
                 sections: [],
@@ -50,12 +51,14 @@ sap.ui.define([
 
             v.setProperty("/courseId", id);
             v.setProperty("/courseTitle", course ? (course.courseCode + " - " + (course.courseName || "")) : "");
-            v.setProperty("/lecturers", m.getProperty("/Lecturers") || []);
-            v.setProperty("/venues", m.getProperty("/Venues") || []);
+            const rb = this.getResourceBundle();
+            v.setProperty("/lecturers", [{ ID: "", name: rb.getText("selectLecturer") }].concat(m.getProperty("/Lecturers") || []));
+            v.setProperty("/venues", [{ ID: "", name: rb.getText("selectVenue") }].concat(m.getProperty("/Venues") || []));
 
             this._refreshSections();
             this._resetDraft();
             v.setProperty("/showAddForm", false);
+            v.setProperty("/editingSectionId", null);
         },
 
         _refreshSections() {
@@ -89,6 +92,24 @@ sap.ui.define([
         onCancelAdd() {
             this._resetDraft();
             this.getView().getModel("view").setProperty("/showAddForm", false);
+            this.getView().getModel("view").setProperty("/editingSectionId", null);
+        },
+
+        onEditSection(ev) {
+            const rowCtx = ev.getSource().getParent().getParent().getBindingContext("view");
+            if (!rowCtx) return;
+            const row = rowCtx.getObject();
+            const v = this.getView().getModel("view");
+            v.setProperty("/editingSectionId", row.ID);
+            v.setProperty("/showAddForm", true);
+            v.setProperty("/draft", {
+                sectionCode: row.sectionCode || "",
+                lecturer_ID: String(row.lecturer_ID || ""),
+                venue_ID: String(row.venue_ID || ""),
+                dayOfWeek: row.dayOfWeek || "",
+                timeRange: (row.startTime && row.endTime) ? `${row.startTime}-${row.endTime}` : "",
+                studentQuota: row.studentQuota || 30
+            });
         },
 
         onSaveSection() {
@@ -96,6 +117,7 @@ sap.ui.define([
             const v = this.getView().getModel("view");
             const cid = v.getProperty("/courseId");
             const d = v.getProperty("/draft");
+            const editingId = v.getProperty("/editingSectionId");
 
             const sectionCode = String(d.sectionCode || "").trim();
             const lecturer_ID = parseInt(d.lecturer_ID, 10);
@@ -122,6 +144,7 @@ sap.ui.define([
             // Real-time conflict validation (venue + lecturer)
             const allSections = m.getProperty("/CourseSections") || [];
             const conflicts = allSections.filter((s) =>
+                (!editingId || s.ID !== editingId) &&
                 s.dayOfWeek === dayOfWeek &&
                 overlaps(startTime, endTime, s.startTime, s.endTime) &&
                 (s.venue_ID === venue_ID || s.lecturer_ID === lecturer_ID)
@@ -137,26 +160,42 @@ sap.ui.define([
                 return;
             }
 
-            const nextId = (m.getProperty("/nextIds/CourseSections") || 10) + 1;
-            m.setProperty("/nextIds/CourseSections", nextId);
-
-            allSections.push({
-                ID: nextId,
-                course_ID: cid,
-                sectionCode,
-                lecturer_ID,
-                venue_ID,
-                studentQuota,
-                enrolled: 0,
-                dayOfWeek,
-                startTime,
-                endTime
-            });
+            if (editingId) {
+                const idx = allSections.findIndex((s) => s.ID === editingId);
+                if (idx >= 0) {
+                    allSections[idx] = {
+                        ...allSections[idx],
+                        sectionCode,
+                        lecturer_ID,
+                        venue_ID,
+                        studentQuota,
+                        dayOfWeek,
+                        startTime,
+                        endTime
+                    };
+                }
+            } else {
+                const nextId = (m.getProperty("/nextIds/CourseSections") || 10) + 1;
+                m.setProperty("/nextIds/CourseSections", nextId);
+                allSections.push({
+                    ID: nextId,
+                    course_ID: cid,
+                    sectionCode,
+                    lecturer_ID,
+                    venue_ID,
+                    studentQuota,
+                    enrolled: 0,
+                    dayOfWeek,
+                    startTime,
+                    endTime
+                });
+            }
             m.setProperty("/CourseSections", allSections);
 
             this._refreshSections();
             this._resetDraft();
             v.setProperty("/showAddForm", false);
+            v.setProperty("/editingSectionId", null);
             MessageToast.show(this.getResourceBundle().getText("sectionAdded"));
         },
 

@@ -29,11 +29,8 @@
 
                             <VBox class="sapUiTinyMarginEnd" width="22rem">
                                 <Label text="{i18n>lecturer}" required="true"/>
-                                <Select selectedKey="{view>/draft/lecturer_ID}" width="100%">
-                                    <items>
-                                        <core:Item key="" text="{i18n>selectLecturer}"/>
-                                        <core:ListItem key="{view>ID}" text="{view>name}" />
-                                    </items>
+                                <Select selectedKey="{view>/draft/lecturer_ID}" width="100%" items="{view>/lecturers}">
+                                    <core:Item key="{view>ID}" text="{view>name}"/>
                                 </Select>
                             </VBox>
                         </HBox>
@@ -63,11 +60,8 @@
                         <HBox wrap="Wrap" renderType="Bare" class="sapUiSmallMarginTop">
                             <VBox class="sapUiTinyMarginEnd" width="22rem">
                                 <Label text="{i18n>venue}" required="true"/>
-                                <Select selectedKey="{view>/draft/venue_ID}" width="100%">
-                                    <items>
-                                        <core:Item key="" text="{i18n>selectVenue}"/>
-                                        <core:ListItem key="{view>ID}" text="{view>name}" />
-                                    </items>
+                                <Select selectedKey="{view>/draft/venue_ID}" width="100%" items="{view>/venues}">
+                                    <core:Item key="{view>ID}" text="{view>name}"/>
                                 </Select>
                             </VBox>
 
@@ -106,6 +100,7 @@
                                 <Text text="{studentQuota}"/>
                                 <Text text="{enrolled}"/>
                                 <HBox justifyContent="Center">
+                                    <Button icon="sap-icon://edit" type="Transparent" press="onEditSection"/>
                                     <Button icon="sap-icon://delete" type="Transparent" press="onDeleteSection"/>
                                 </HBox>
                             </cells>

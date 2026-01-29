@@ -86,6 +86,11 @@
                                             <core:CustomData key="courseId" value="{view>ID}" writeToDom="false"/>
                                         </customData>
                                     </Button>
+                                    <Button icon="sap-icon://edit" type="Transparent" press="onEditCourse">
+                                        <customData>
+                                            <core:CustomData key="courseId" value="{view>ID}" writeToDom="false"/>
+                                        </customData>
+                                    </Button>
                                 </HBox>
                             </cells>
                         </ColumnListItem>

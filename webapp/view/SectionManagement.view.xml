@@ -22,7 +22,7 @@
                         <Title text="{i18n>addNewSection}" level="H4"/>
 
                         <HBox wrap="Wrap" renderType="Bare" class="sapUiSmallMarginTop">
-                            <VBox class="sapUiTinyMarginEnd" width="22rem">
+                            <VBox class="sapUiTinyMarginEnd" width="12rem">
                                 <Label text="{i18n>sectionId}" required="true"/>
                                 <Input value="{view>/draft/sectionCode}" placeholder="e.g. A01"/>
                             </VBox>
@@ -65,9 +65,9 @@
                                 </Select>
                             </VBox>
 
-                            <VBox class="sapUiTinyMarginEnd" width="22rem">
+                            <VBox class="sapUiTinyMarginEnd" width="12rem">
                                 <Label text="{i18n>capacity}" required="true"/>
-                                <StepInput value="{view>/draft/studentQuota}" min="1" max="300"/>
+                                <StepInput value="{view>/draft/studentQuota}" min="1" max="300" width="6rem" textAlign="Center"/>
                             </VBox>
                         </HBox>
 

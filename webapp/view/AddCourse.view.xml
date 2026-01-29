@@ -16,7 +16,7 @@
                         <HBox wrap="Wrap" class="sapUiSmallMarginBottom" renderType="Bare">
                             <VBox class="sapUiTinyMarginEnd" width="20rem">
                                 <Label text="{i18n>faculty}" required="true"/>
-                                <Select selectedKey="{view>/faculty}">
+                                <Select selectedKey="{view>/faculty}" change="onFacultyChange">
                                     <items>
                                         <core:Item key="" text="{i18n>selectFaculty}"/>
                                         <core:Item key="Computing" text="Computing"/>
@@ -58,7 +58,7 @@
 
                             <VBox class="sapUiTinyMarginEnd" width="20rem">
                                 <Label text="{i18n>creditHours}" required="true"/>
-                                <StepInput value="{view>/creditHours}" min="1" max="6" step="1"/>
+                                <StepInput value="{view>/creditHours}" min="1" max="6" step="1" width="6rem" textAlign="Center"/>
                             </VBox>
                         </HBox>
 

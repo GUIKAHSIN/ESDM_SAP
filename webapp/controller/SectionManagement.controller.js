@@ -141,7 +141,7 @@ sap.ui.define([
                 return;
             }
 
-            // Real-time conflict validation (venue + lecturer)
+            // Real-time conflict validation (venue + lecturer) - collect all conflicts
             const allSections = m.getProperty("/CourseSections") || [];
             const conflicts = allSections.filter((s) =>
                 (!editingId || s.ID !== editingId) &&
@@ -149,14 +149,23 @@ sap.ui.define([
                 overlaps(startTime, endTime, s.startTime, s.endTime) &&
                 (s.venue_ID === venue_ID || s.lecturer_ID === lecturer_ID)
             );
-            const venueConflict = conflicts.find((s) => s.venue_ID === venue_ID);
-            if (venueConflict) {
-                MessageBox.error(`Venue conflict: venue already used on ${dayOfWeek} ${venueConflict.startTime}-${venueConflict.endTime}.`);
-                return;
-            }
-            const lecturerConflict = conflicts.find((s) => s.lecturer_ID === lecturer_ID);
-            if (lecturerConflict) {
-                MessageBox.error(`Lecturer conflict: lecturer already scheduled on ${dayOfWeek} ${lecturerConflict.startTime}-${lecturerConflict.endTime}.`);
+            if (conflicts.length) {
+                const venueConflicts = conflicts.filter((s) => s.venue_ID === venue_ID);
+                const lecturerConflicts = conflicts.filter((s) => s.lecturer_ID === lecturer_ID);
+                const messages = [];
+                if (venueConflicts.length) {
+                    messages.push("Venue conflicts:");
+                    venueConflicts.forEach((s) => {
+                        messages.push(`• ${dayOfWeek} ${s.startTime}-${s.endTime} at venue ID ${s.venue_ID}`);
+                    });
+                }
+                if (lecturerConflicts.length) {
+                    messages.push("Lecturer conflicts:");
+                    lecturerConflicts.forEach((s) => {
+                        messages.push(`• ${dayOfWeek} ${s.startTime}-${s.endTime} with lecturer ID ${s.lecturer_ID}`);
+                    });
+                }
+                MessageBox.error(messages.join("\n"));
                 return;
             }
 

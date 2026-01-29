@@ -28,15 +28,27 @@ sap.ui.define([
             const vm = this.getView().getModel("view");
             if (!main || !vm) { return; }
 
-            const progs = (main.getProperty("/Programmes") || []).map((p) => ({
+            vm.setProperty("/allProgrammes", (main.getProperty("/Programmes") || []).map((p) => ({
                 ID: p.ID,
                 name: p.name,
+                faculty: "Computing",
                 selected: false
-            }));
-            vm.setProperty("/programmes", progs);
+            })));
+            vm.setProperty("/programmes", []); // will be filled when faculty chosen
 
             const courses = main.getProperty("/Courses") || [];
             vm.setProperty("/availablePrereqCourses", courses);
+        },
+
+        onFacultyChange() {
+            const vm = this.getView().getModel("view");
+            const faculty = vm.getProperty("/faculty");
+            const all = vm.getProperty("/allProgrammes") || [];
+            if (faculty === "Computing") {
+                vm.setProperty("/programmes", all);
+            } else {
+                vm.setProperty("/programmes", []);
+            }
         },
 
         _collectSelectedProgrammes() {

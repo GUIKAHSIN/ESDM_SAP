@@ -42,10 +42,25 @@
 
                         <VBox class="sapUiSmallMarginBottom">
                             <Label text="{i18n>programmeBachelor}" required="true"/>
-                            <Input id="programmeClickInput" value="{view>/programmeSummary}" editable="false"
-                                placeholder="{i18n>programmeClickPlaceholder}" press="onOpenProgrammePopover"
-                                showValueHelp="true" valueHelpRequest="onOpenProgrammePopover"/>
-                            <Text text="{i18n>programmeHint}" class="sapUiTinyMarginTop"/>
+                            <Panel width="100%" backgroundDesign="Solid" class="sapUiSmallMarginTop">
+                                <content>
+                                    <VBox class="sapUiSmallMargin">
+                                        <CheckBox id="programmeAllCb" text="{i18n>allProgrammes}"
+                                            selected="{view>/allProgrammesSelected}" select="onSelectAllProgrammes"/>
+                                        <Toolbar width="100%" class="sapUiTinyMarginTopBottom">
+                                            <ToolbarSpacer/>
+                                            <ToolbarSeparator/>
+                                        </Toolbar>
+                                        <ScrollContainer height="12rem" vertical="true" class="sapUiTinyMarginBottom">
+                                            <VBox items="{view>/programmes}">
+                                                <items>
+                                                    <CheckBox text="{view>name}" selected="{view>selected}" select="onProgrammeSelect"/>
+                                                </items>
+                                            </VBox>
+                                        </ScrollContainer>
+                                    </VBox>
+                                </content>
+                            </Panel>
                         </VBox>
 
                         <HBox wrap="Wrap" renderType="Bare" class="sapUiSmallMarginTop">
@@ -67,8 +82,7 @@
 
                         <VBox class="sapUiSmallMarginTop">
                             <Label text="{i18n>prerequisitesHeader}"/>
-                            <Text text="{i18n>prerequisitesHint}" class="sapUiTinyMarginBottom"/>
-                            <Input id="prereqInput" value="{view>/prereqSearch}" placeholder="{i18n>prereqTypePlaceholder}"
+                            <Input id="prereqInput" value="{view>/prereqSearch}" placeholder="{i18n>prereqSearchPlaceholder}"
                                 liveChange="onPrereqType" focus="onPrereqInputFocus"/>
                             <Text text="{view>/prereqSummary}" class="sapUiTinyMarginTop" visible="{= ${view>/prereqSummary} !== '' }"/>
                         </VBox>

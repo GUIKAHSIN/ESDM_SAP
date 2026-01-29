@@ -101,10 +101,26 @@ sap.ui.define([
             const faculty = vm.getProperty("/faculty");
             const all = vm.getProperty("/allProgrammes") || [];
             if (faculty === "Computing") {
-                vm.setProperty("/programmes", all);
+                vm.setProperty("/programmes", all.map((p) => ({ ...p, selected: false })));
             } else {
                 vm.setProperty("/programmes", []);
             }
+            vm.setProperty("/allProgrammesSelected", false);
+        },
+
+        onSelectAllProgrammes(oEvent) {
+            const vm = this.getView().getModel("view");
+            const selected = oEvent.getParameter("selected");
+            vm.setProperty("/allProgrammesSelected", selected);
+            const progs = vm.getProperty("/programmes") || [];
+            progs.forEach((p, i) => vm.setProperty("/programmes/" + i + "/selected", selected));
+        },
+
+        onProgrammeSelect(oEvent) {
+            const vm = this.getView().getModel("view");
+            const progs = vm.getProperty("/programmes") || [];
+            const allSelected = progs.every((p) => p.selected);
+            vm.setProperty("/allProgrammesSelected", allSelected);
         },
 
         _collectSelectedProgrammes() {
@@ -130,12 +146,14 @@ sap.ui.define([
             const vm = this.getView().getModel("view");
             const q = (searchText || "").toLowerCase().trim();
             const all = vm.getProperty("/availablePrereqCourses") || [];
-            const filtered = q ? all.filter((c) =>
-                String(c.courseCode || "").toLowerCase().includes(q) ||
-                String(c.courseName || "").toLowerCase().includes(q) ||
-                String(c.faculty || "").toLowerCase().includes(q)
-            ) : all;
-            vm.setProperty("/filteredPrereqCourses", filtered);
+            const filtered = q === ""
+                ? all
+                : all.filter((c) =>
+                    String(c.courseCode || "").toLowerCase().includes(q) ||
+                    String(c.courseName || "").toLowerCase().includes(q) ||
+                    String(c.faculty || "").toLowerCase().includes(q)
+                );
+            vm.setProperty("/filteredPrereqCourses", [...filtered]);
 
             if (!this._prereqPopover) {
                 const list = new sap.m.List({
@@ -152,6 +170,7 @@ sap.ui.define([
                 list.attachSelectionChange(this._onPrereqSelectionChange.bind(this));
                 this._prereqPopover = new sap.m.Popover({
                     title: this.getResourceBundle().getText("prerequisitesHeader"),
+                    placement: sap.m.PlacementType.Bottom,
                     contentWidth: "28rem",
                     contentHeight: "18rem",
                     content: [list],

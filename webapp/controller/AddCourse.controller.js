@@ -12,8 +12,10 @@ sap.ui.define([
                 faculty: "",
                 yearOfStudy: "",
                 programmes: [],
+                programmeSearch: "",
+                filteredProgrammes: [],
+                selectedProgrammeIds: [],
                 programmeSummary: "",
-                allProgrammesSelected: false,
                 courseCode: "",
                 courseName: "",
                 creditHours: 3,
@@ -33,100 +35,170 @@ sap.ui.define([
             const vm = this.getView().getModel("view");
             if (!main || !vm) { return; }
 
-            vm.setProperty("/allProgrammes", (main.getProperty("/Programmes") || []).map((p) => ({
-                ID: p.ID,
-                name: p.name,
-                faculty: "Computing",
-                selected: false
-            })));
-            vm.setProperty("/programmes", []); // will be filled when faculty chosen
+            vm.setProperty("/programmes", []); // filled when faculty is Computing
+            vm.setProperty("/filteredProgrammes", []);
+            vm.setProperty("/selectedProgrammeIds", []);
 
             const courses = main.getProperty("/Courses") || [];
             vm.setProperty("/availablePrereqCourses", courses);
             vm.setProperty("/filteredPrereqCourses", courses);
         },
 
-        onOpenProgrammePopover(oEvent) {
-            const that = this;
-            const src = oEvent.getSource();
+        onFacultyChange() {
             const vm = this.getView().getModel("view");
-            const rb = this.getResourceBundle();
+            const main = this.getView().getModel();
+            const faculty = vm.getProperty("/faculty");
+            if (faculty === "Computing") {
+                const programmes = main.getProperty("/Programmes") || [];
+                vm.setProperty("/programmes", programmes);
+            } else {
+                vm.setProperty("/programmes", []);
+                vm.setProperty("/selectedProgrammeIds", []);
+                vm.setProperty("/programmeSummary", "");
+            }
+            vm.setProperty("/programmeSearch", "");
+            this._filterProgrammeAndOpenPopover("");
+        },
+
+        onProgrammeType(oEvent) {
+            const q = (oEvent.getParameter("newValue") || "").trim();
+            const vm = this.getView().getModel("view");
+            vm.setProperty("/programmeSearch", q);
+            this._filterProgrammeAndOpenPopover(q);
+        },
+
+        onProgrammeInputFocus(oEvent) {
+            const vm = this.getView().getModel("view");
+            const q = vm.getProperty("/programmeSearch") || "";
+            this._filterProgrammeAndOpenPopover(q);
+        },
+
+        _filterProgrammeAndOpenPopover(searchText) {
+            const vm = this.getView().getModel("view");
+            const faculty = vm.getProperty("/faculty");
+            if (faculty !== "Computing") {
+                vm.setProperty("/filteredProgrammes", []);
+                return; // do not open popover until faculty is Computing
+            }
+            const q = (searchText || "").toLowerCase().trim();
+            const programmes = vm.getProperty("/programmes") || [];
+            const filtered = q === ""
+                ? programmes
+                : programmes.filter((p) => String(p.name || "").toLowerCase().includes(q));
+            vm.setProperty("/filteredProgrammes", [...filtered]);
+
             if (!this._programmePopover) {
-                const vbox = new sap.m.VBox({ id: this.getView().getId() + "--programmeVBox" });
-                const allCb = new sap.m.CheckBox({ text: rb.getText("allProgrammes"), id: this.getView().getId() + "--allProg" });
-                allCb.attachSelect(function () {
-                    const progs = vm.getProperty("/programmes") || [];
-                    const sel = allCb.getSelected();
-                    progs.forEach((p, i) => vm.setProperty("/programmes/" + i + "/selected", sel));
+                const rb = this.getResourceBundle();
+                const list = new sap.m.List({
+                    id: this.getView().getId() + "--programmeList",
+                    mode: sap.m.ListMode.MultiSelect
                 });
+                list.bindItems({
+                    path: "view>/filteredProgrammes",
+                    template: new sap.m.StandardListItem({ title: "{view>name}" })
+                });
+                list.attachSelectionChange(this._onProgrammeSelectionChange.bind(this));
+
+                const allCb = new sap.m.CheckBox({
+                    text: rb.getText("allProgrammes"),
+                    select: this._onProgrammeAllSelect.bind(this)
+                });
+                const vbox = new sap.m.VBox();
                 vbox.addItem(allCb);
-                const scroll = new sap.m.ScrollContainer({
-                    horizontal: false,
-                    vertical: true,
-                    height: "16rem",
-                    content: [vbox]
-                });
+                vbox.addItem(list);
+
                 this._programmePopover = new sap.m.Popover({
                     title: rb.getText("programmeBachelor"),
+                    placement: sap.m.PlacementType.Bottom,
                     contentWidth: "22rem",
-                    content: [scroll],
-                    afterClose: function () { that._updateProgrammeSummary(); }
+                    contentHeight: "18rem",
+                    content: [vbox],
+                    afterOpen: this._onProgrammePopoverAfterOpen.bind(this),
+                    afterClose: this._onProgrammePopoverAfterClose.bind(this)
                 });
+                this._programmePopover.setModel(this.getView().getModel("view"), "view");
                 this.getView().addDependent(this._programmePopover);
             }
-            const progs = vm.getProperty("/programmes") || [];
-            const scroll = this._programmePopover.getContent()[0];
-            const vbox = scroll.getContent()[0];
-            while (vbox.getItems().length > 1) vbox.removeItem(vbox.getItems()[1]);
-            progs.forEach((p, i) => {
-                const cb = new sap.m.CheckBox({ text: p.name, selected: !!p.selected });
-                const idx = i;
-                cb.attachSelect(function () { vm.setProperty("/programmes/" + idx + "/selected", cb.getSelected()); });
-                vbox.addItem(cb);
-            });
+            this._programmePopover.openBy(this.byId("programmeInput"));
+        },
+
+        _onProgrammeAllSelect(oEvent) {
+            const list = this._programmePopover.getContent()[0].getItems()[1];
+            const selected = oEvent.getParameter("selected");
+            if (selected) {
+                const contexts = [];
+                for (let i = 0; i < list.getItems().length; i++) {
+                    const ctx = list.getContextByIndex(i);
+                    if (ctx) contexts.push(ctx);
+                }
+                if (contexts.length) list.setSelectedContexts(contexts);
+            } else {
+                list.removeSelections();
+            }
+            this._syncProgrammeSelectionFromList(list);
+        },
+
+        _onProgrammePopoverAfterOpen() {
+            const vbox = this._programmePopover.getContent()[0];
+            const list = vbox.getItems()[1];
+            const vm = this.getView().getModel("view");
+            const selectedIds = vm.getProperty("/selectedProgrammeIds") || [];
+            if (selectedIds.length === 0) return;
+            setTimeout(() => {
+                const contexts = [];
+                for (let i = 0; i < list.getItems().length; i++) {
+                    const ctx = list.getContextByIndex(i);
+                    if (ctx && selectedIds.indexOf(ctx.getObject().ID) >= 0) contexts.push(ctx);
+                }
+                if (contexts.length) list.setSelectedContexts(contexts);
+                const allCb = vbox.getItems()[0];
+                allCb.setSelected(list.getItems().length > 0 && list.getSelectedContexts("view").length === list.getItems().length);
+            }, 100);
+        },
+
+        _onProgrammePopoverAfterClose() {
+            const list = this._programmePopover.getContent()[0].getItems()[1];
+            const contexts = list.getSelectedContexts("view") || [];
+            const ids = contexts.map((c) => c.getObject().ID);
+            const vm = this.getView().getModel("view");
+            vm.setProperty("/selectedProgrammeIds", ids);
+            this._updateProgrammeSummary();
+        },
+
+        _onProgrammeSelectionChange(oEvent) {
+            const list = oEvent.getSource();
+            this._syncProgrammeSelectionFromList(list);
+        },
+
+        _syncProgrammeSelectionFromList(list) {
+            const contexts = list.getSelectedContexts("view") || [];
+            const ids = contexts.map((c) => c.getObject().ID);
+            this.getView().getModel("view").setProperty("/selectedProgrammeIds", ids);
+            this._updateProgrammeSummary();
+            const vbox = this._programmePopover.getContent()[0];
             const allCb = vbox.getItems()[0];
-            allCb.setSelected(progs.length > 0 && progs.every((p) => p.selected));
-            this._programmePopover.openBy(src);
+            allCb.setSelected(list.getItems().length > 0 && contexts.length === list.getItems().length);
         },
 
         _updateProgrammeSummary() {
             const vm = this.getView().getModel("view");
-            const progs = vm.getProperty("/programmes") || [];
-            const selected = progs.filter((p) => p.selected).map((p) => p.name);
-            vm.setProperty("/programmeSummary", selected.length ? selected.join(", ") : "");
-        },
-
-        onFacultyChange() {
-            const vm = this.getView().getModel("view");
-            const faculty = vm.getProperty("/faculty");
-            const all = vm.getProperty("/allProgrammes") || [];
-            if (faculty === "Computing") {
-                vm.setProperty("/programmes", all.map((p) => ({ ...p, selected: false })));
-            } else {
-                vm.setProperty("/programmes", []);
-            }
-            vm.setProperty("/allProgrammesSelected", false);
-        },
-
-        onSelectAllProgrammes(oEvent) {
-            const vm = this.getView().getModel("view");
-            const selected = oEvent.getParameter("selected");
-            vm.setProperty("/allProgrammesSelected", selected);
-            const progs = vm.getProperty("/programmes") || [];
-            progs.forEach((p, i) => vm.setProperty("/programmes/" + i + "/selected", selected));
-        },
-
-        onProgrammeSelect(oEvent) {
-            const vm = this.getView().getModel("view");
-            const progs = vm.getProperty("/programmes") || [];
-            const allSelected = progs.every((p) => p.selected);
-            vm.setProperty("/allProgrammesSelected", allSelected);
+            const ids = vm.getProperty("/selectedProgrammeIds") || [];
+            const programmes = vm.getProperty("/programmes") || [];
+            const names = ids.map((id) => {
+                const p = programmes.find((x) => x.ID === id);
+                return p ? p.name : String(id);
+            });
+            vm.setProperty("/programmeSummary", names.length ? "Selected: " + names.join(", ") : "");
         },
 
         _collectSelectedProgrammes() {
             const vm = this.getView().getModel("view");
-            const progs = vm.getProperty("/programmes") || [];
-            return progs.filter((p) => p.selected).map((p) => p.name);
+            const ids = vm.getProperty("/selectedProgrammeIds") || [];
+            const programmes = vm.getProperty("/programmes") || [];
+            return ids.map((id) => {
+                const p = programmes.find((x) => x.ID === id);
+                return p ? p.name : String(id);
+            });
         },
 
         onPrereqType(oEvent) {

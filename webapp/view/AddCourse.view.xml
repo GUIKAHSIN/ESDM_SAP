@@ -42,34 +42,9 @@
 
                         <VBox class="sapUiSmallMarginBottom">
                             <Label text="{i18n>programmeBachelor}" required="true"/>
-                            <Panel width="100%" backgroundDesign="Solid" class="sapUiSmallMarginTop">
-                                <content>
-                                    <VBox class="sapUiSmallMargin">
-                                        <CheckBox id="programmeAllCb" text="{i18n>allProgrammes}"
-                                            selected="{view>/allProgrammesSelected}" select="onSelectAllProgrammes"/>
-                                        <Toolbar width="100%" class="sapUiTinyMarginTopBottom">
-                                            <ToolbarSpacer/>
-                                            <ToolbarSeparator/>
-                                        </Toolbar>
-                                                        <List
-                    items="{view>/programmes}"
-                    height="12rem"
-                    mode="None"
-                    showSeparators="None"
-                    class="sapUiTinyMarginBottom">
-
-                    <items>
-                        <CustomListItem>
-                            <CheckBox
-                                text="{view>name}"
-                                selected="{view>selected}"
-                                select="onProgrammeSelect"/>
-                        </CustomListItem>
-                    </items>
-                </List>
-                                    </VBox>
-                                </content>
-                            </Panel>
+                            <Input id="programmeInput" value="{view>/programmeSearch}" placeholder="{i18n>programmeSearchPlaceholder}"
+                                liveChange="onProgrammeType" focus="onProgrammeInputFocus"/>
+                            <Text text="{view>/programmeSummary}" class="sapUiTinyMarginTop" visible="{= ${view>/programmeSummary} !== '' }"/>
                         </VBox>
 
                         <HBox wrap="Wrap" renderType="Bare" class="sapUiSmallMarginTop">
